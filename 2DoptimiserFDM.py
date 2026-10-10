@@ -361,7 +361,6 @@ def optimise():
         pickle.dump(es, f)
 
 
-    
 
 if __name__ == "__main__":
     optimise()

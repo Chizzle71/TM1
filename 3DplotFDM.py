@@ -258,12 +258,12 @@ points=solve(points,newpoints,storage)
 
 
 
-# Font: always Times New Roman (with serif fallbacks if it isn't installed) ---
+# Font
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.serif'] = ['Times New Roman', 'Times', 'Liberation Serif', 'DejaVu Serif']
 plt.rcParams['mathtext.fontset'] = 'stix'
 
-#--- Physical extents of the domain ---
+#Physical extents of the domain
 Lx = cellsx * side
 Ly = cellsy * side
 Lz = cellsz * side
@@ -273,9 +273,9 @@ z_coords = np.linspace(0, Lz, pointsz)
 cmap = cm.seismic#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 vmin, vmax = 300, 400
 norm = Normalize(vmin=vmin, vmax=vmax)
-ISO_ELEV = 35.264 # true isometric elevation angle#
+ISO_ELEV = 35.264 # true isometric elevation angle
 ISO_AZIM = 45
-Y_DRAW = Ly / 2 # every slice is drawn here, i.e. the centre of the frame
+Y_DRAW = Ly / 2 # every slice is drawn here
 SLICE_LINE=4
 
 def new_iso_axes(figsize=(7, 7)):
@@ -297,7 +297,7 @@ def new_iso_axes(figsize=(7, 7)):
     def format_axis_tick(value, position):
         return '0' if np.isclose(value, 0) else f'{value:.1f}'
 
-    # 5 ticks, spaced by 0.4 m, same as Figures 2–4
+    # 5 ticks spaced by 0.4 m
     x_ticks = np.arange(0, Lx + 0.001, 0.4)
     y_ticks = np.arange(0, Ly + 0.001, 0.4)
     z_ticks = np.arange(0, Lz + 0.001, 0.4)
@@ -316,12 +316,12 @@ def plot_face(ax, X, Y, Z, data, alpha=1.0):
     ax.plot_surface(X, Y, Z, facecolors=facecolors, rstride=1, cstride=1,
                     shade=False, linewidth=0, antialiased=False, alpha=alpha)
 
-#Coordinate grids reused for every face/slice (shapes match `points[z, y, x]` indexing)
+#Coordinate grids reused for every face
 Xxy, Yxy = np.meshgrid(x_coords, y_coords)
 Xxz, Zxz = np.meshgrid(x_coords, z_coords)
 Yyz, Zyz = np.meshgrid(y_coords, z_coords)
 
-#Image 1: the cube itself, all 6 outer faces
+#Image 1 - the cube itself, all 6 outer faces
 fig, ax = new_iso_axes()
 plot_face(ax, Xxy, Yxy, np.full_like(Xxy, 0.0), points[0, :, :]) # bottom (z=0)
 plot_face(ax, Xxy, Yxy, np.full_like(Xxy, Lz), points[-1, :, :]) # top (z=Lz)
@@ -336,7 +336,7 @@ slice_r_values = [0.24, 0.1788854382, 0]#only valid for curent y values
 slice_labels = ['C', 'B', 'A']
 slice_colours = ['lightgreen', 'yellow', '#F4B183']
 
-line_offset = 0.01 * Ly#############:(
+line_offset = 0.01 * Ly#############
 
 for y_slice, label, colour in zip(slice_y_values, slice_labels, slice_colours):
     y_line = y_slice - line_offset if np.isclose(y_slice, Ly) else y_slice
@@ -369,14 +369,14 @@ def draw_slice_axes(ax, y_val, n_ticks=5, tick_len_frac=0.02, fontsize=14):
     z_ticks = np.linspace(0, Lz, n_ticks)
     fontnewer=19
 
-    # x-axis: runs along the bottom edge of the slice (z = 0)
+    # x-axis - runs along the bottom edge of the slice
     ax.plot([0, Lx], [y_val, y_val], [0, 0], color='black', linewidth=1, zorder=10)
     for tx in x_ticks:
         ax.plot([tx, tx], [y_val, y_val], [0, -dz], color='black', linewidth=1, zorder=10)
         ax.text(tx, y_val, -2 * dz, format_tick(tx), ha='center', va='top', fontsize=fontnewer)
     ax.text(Lx/2 - 4*dx, y_val - 8*dy, 0, '$x$ (m)', fontsize=fontnewer)
 
-    # z-axis: runs along the left edge of the slice (x = 0)
+    # z-axis - runs along the left edge of the slice
     ax.plot([0, 0], [y_val, y_val], [0, Lz], color='black', linewidth=1, zorder=10)
     for tz in z_ticks:
         ax.plot([0, -dx], [y_val, y_val], [tz, tz], color='black', linewidth=1, zorder=10)
@@ -386,7 +386,7 @@ def draw_slice_axes(ax, y_val, n_ticks=5, tick_len_frac=0.02, fontsize=14):
 def place_title_above_slice(fig, ax, y_val, text, gap=0.03, fontsize=14):
     """Put a title horizontally centred on the slice and just above its highest projected point.
     `gap` is in axes-fraction units."""
-    fig.canvas.draw() # make sure the projection matrix is up to date
+    fig.canvas.draw()
     M = ax.get_proj()
     corners = [(0, y_val, 0), (Lx, y_val, 0), (0, y_val, Lz), (Lx, y_val, Lz)]
     proj = [proj3d.proj_transform(cx, cy, cz, M)[:2] for cx, cy, cz in corners]
@@ -396,7 +396,7 @@ def place_title_above_slice(fig, ax, y_val, text, gap=0.03, fontsize=14):
     y_top = frac[:, 1].max()
     ax.text2D(x_centre, y_top + gap, text, transform=ax.transAxes, ha='center', va='bottom', fontsize=fontsize)
 
-#Images 2-4: xz-plane slices, all drawn at the same position
+#Images 2-4 - xz-plane slices, all drawn at the same position
 y_slice_indices = [round(slice_y_values[0]/(side/(divisions-1))), round(slice_y_values[1]/(side/(divisions-1))), round(slice_y_values[2]/(side/(divisions-1)))]######
 labelcount=0
 for n, yi in enumerate(y_slice_indices, start=2):
@@ -404,7 +404,6 @@ for n, yi in enumerate(y_slice_indices, start=2):
     ax.computed_zorder = False
     ax.set_axis_off()
 
-    # belt-and-braces: even with axis off, make sure nothing paints a background
     fig.patch.set_alpha(0.0)
     ax.patch.set_alpha(0.0)
 
@@ -430,7 +429,6 @@ for n, yi in enumerate(y_slice_indices, start=2):
     place_title_above_slice(fig, ax, Y_DRAW, f'Slice {slice_labels[labelcount]} ($y$ = {y_sampled:.2f} m)')
     labelcount += 1
 
-    # still no bbox_inches='tight' — that's what kept slices aligned
     fig.savefig(f'3d_{n}.png', dpi=600, transparent=True)
     plt.close(fig)
 
