@@ -1,39 +1,55 @@
-# Imports
 import math
 from numba import njit, prange, set_num_threads
 import numpy as np
 import matplotlib.pyplot as plt
-import cma
-import pickle
-import os
+from matplotlib import colormaps
+from matplotlib.patches import Circle, Rectangle, RegularPolygon
+list(colormaps)
 
+plt.rcParams.update({
+    'font.family': 'Times New Roman',
+    'font.size': 12*1.8
+})
+plt.rcParams['mathtext.fontset'] = 'stix'
 
-
-# Mac
-set_num_threads(6)
+# Cores
+set_num_threads(18)
 
 # COMSOL related
-cellsx=20
-cellsy=20
-hn=0.04
+cellsx=30
+cellsy=30
+hn=0.01
 E=-54.7*hn**4+52.06*hn**3-15.05*hn**2+4.932*hn-0.003074
 
 # Solver settings
-divisions=7
+divisions=12
 maxiterations=1e7
 diagfreq=1e4
-converged=1e-6*diagfreq # currently n K difference over i iterations
+converged=1e-7*diagfreq # Currently 0.001K difference over 10000 iterations
 damping=0.425
 edge=0.5
-mutationiters=5
 
 
 
-filename="inputthetas1306_optimised4.txt"
-outputfilename="inputthetas1306_optimised4.txt"
+filename="inputthetas1_mut1.txt"
 
 pointsx=cellsx*(divisions-1)+1
 pointsy=cellsy*(divisions-1)+1
+
+cells_theta=np.loadtxt(filename)
+theta=np.deg2rad(cells_theta)
+
+cells_k_xx=np.cos(theta)**2+E*np.sin(theta)**2
+cells_k_xy=(1-E)*np.cos(theta)*np.sin(theta)
+cells_k_yx=cells_k_xy.copy()
+cells_k_yy=np.sin(theta)**2+E*np.cos(theta)**2
+
+points=np.zeros((pointsy,pointsx))
+for x in range(pointsx):
+    points[:,x]=400-x*100/(pointsx-1)
+
+newpoints=points.copy()
+storage=points.copy()
 
 xa_lookup=np.empty(pointsx,np.int32)
 xb_lookup=np.empty(pointsx,np.int32)
@@ -42,7 +58,7 @@ xd_lookup=np.empty(pointsx,np.int32)
 for x in range(pointsx):
     xa_lookup[x]=math.ceil(x/(divisions-1))-1
     xb_lookup[x]=math.floor(x/(divisions-1))
-    xc_lookup[x]=xa_lookup[x] # ------------ could optimise a bit
+    xc_lookup[x]=xa_lookup[x]
     xd_lookup[x]=xb_lookup[x]
 
 ya_lookup=np.empty(pointsy,np.int32)
@@ -55,14 +71,8 @@ for y in range(pointsy):
     yc_lookup[y]=math.ceil(y/(divisions-1))-1
     yd_lookup[y]=yc_lookup[y]
 
-
-
-@njit(parallel=True, fastmath=True)
-def solve(
-    points, newpoints, storage,
-    cells_k_xx, cells_k_xy, cells_k_yx, cells_k_yy,
-    xa_lookup, xb_lookup, xc_lookup, xd_lookup,
-    ya_lookup, yb_lookup, yc_lookup, yd_lookup):
+@njit(parallel=True, fastmath=True) # Floating point reassociation and commutativity on
+def solve(points,newpoints,storage):
     for i in range(maxiterations):
         regressionlong=0.0
         for y in prange(pointsy):
@@ -99,102 +109,100 @@ def solve(
                     storage[y,x]=newpoints[y,x]
         if (i+1)%diagfreq==0:
             regressionlongavg = regressionlong/(pointsx*pointsy)
-            #print(i+1, regressionlongavg)
+            print(i+1, regressionlongavg)
             if regressionlongavg<converged:
-                print("\nConverged at iteration", i+1, regressionlongavg)
+                print("Converged at iteration", i+1)
                 break
         points,newpoints=newpoints,points
-    return points
+    return newpoints
+
+points=solve(points,newpoints,storage)
+
+# Cloaks
+cloak_locations = [
+    (0.15, 0.15),
+]
+cloak_radii = [
+    0.045,
+]
+
+# Cold features
+cold_points = [
+    #(x,y)
+]
+
+cold_regions = [
+    #(x,y,r)
+]
+
+# Hot features
+hot_points = [
+    #(x,y)
+]
+
+hot_regions = [
+    #(x,y,r)
+]
 
 
+fig, ax = plt.subplots(figsize=(10, 8))
 
-def run_simulation(theta):
-    theta = np.deg2rad(theta)
+im = ax.imshow(
+    points,
+    origin='lower',
+    cmap='seismic', # gray will give the default one
+    vmin=300,
+    vmax=400,
+    extent=[0, 0.3, 0, 0.3]
+)
+#plt.colorbar(im, ax=ax, label="Temperature")
 
-    cells_k_xx=np.cos(theta)**2+E*np.sin(theta)**2
-    cells_k_xy=(1-E)*np.cos(theta)*np.sin(theta)
-    cells_k_yx=cells_k_xy.copy()
-    cells_k_yy=np.sin(theta)**2+E*np.cos(theta)**2
+# Cloaks
+for (cx, cy), r in zip(cloak_locations, cloak_radii):
+    ax.add_patch(
+        Circle((cx, cy), r,
+               edgecolor="black",#####
+               linewidth=2,#####
+               fill=False)
+    )
 
-    points=np.zeros((pointsy,pointsx))
-    for x in range(pointsx):
-        points[:,x]=400-x*100/(pointsx-1)
+# Cold point features
+for x, y in cold_points:
+    ax.plot(x, y, marker='x', color='blue',
+            markersize=10, markeredgewidth=2)
 
-    newpoints=points.copy()
-    storage=points.copy()
+# Cold circular features
+for x, y, r in cold_regions:
+    ax.add_patch(
+        Circle((x, y), r,
+               edgecolor="blue",
+               linestyle="--",
+               linewidth=2,
+               fill=False)
+    )
 
-    points = solve(points, newpoints, storage,
-                   cells_k_xx, cells_k_xy, cells_k_yx, cells_k_yy,
-                   xa_lookup, xb_lookup, xc_lookup, xd_lookup,
-                   ya_lookup, yb_lookup, yc_lookup, yd_lookup)
-    
-    return points
+# Hot point features
+for x, y in hot_points:
+    ax.plot(x, y, marker='x', color='red',
+            markersize=10, markeredgewidth=2)
 
+# Hot circular features
+for x, y, r in hot_regions:
+    ax.add_patch(
+        Circle((x, y), r,
+               edgecolor="red",
+               linestyle="--",
+               linewidth=2,
+               fill=False)
+    )
 
+ax.set_xlabel("$x$ (m)")
+ax.set_ylabel("$y$ (m)")
+ax.set_aspect("equal")
+ax.set_title(f"2D case 1")
 
-def objective(theta_flat):
+ax.set_xticks(np.arange(0, 0.3 + 0.001, 0.06))
+ax.set_yticks(np.arange(0, 0.3 + 0.001, 0.06))
 
-    theta = theta_flat.reshape((cellsy, cellsx))
-
-    points = run_simulation(theta)
-
-    cy = points.shape[0] // 2
-    cx = points.shape[1] // 2
-
-    return points[cy, cx]
-
-
-
-def optimise():
-
-    if os.path.exists("cma_state.pkl"):
-
-        print("Continuing previous optimisation...")
-
-        with open("cma_state.pkl", "rb") as f:
-            es = pickle.load(f)
-
-    else:
-
-        print("Starting new optimisation...")
-
-        theta0 = np.loadtxt(filename).flatten()
-
-        es = cma.CMAEvolutionStrategy(
-            theta0,
-            5.0,
-            {
-                "popsize": 10,
-                "bounds": [-360, 360]
-            }
-        )
-
-
-    for generation in range(mutationiters):
-
-        solutions = es.ask()
-
-        scores = [objective(theta) for theta in solutions]
-
-        es.tell(solutions, scores)
-
-        print(
-            f"Generation {generation+1}: "
-            f"Best = {es.result.fbest:.6f}"
-        )
-
-
-    best_theta = es.result.xbest.reshape((cellsy,cellsx))
-
-    np.savetxt(outputfilename, best_theta, fmt="%.6f")
-
-
-    with open("cma_state.pkl", "wb") as f:
-        pickle.dump(es, f)
-        
-
-
-if __name__ == "__main__":
-    optimise()
-
-#this is a diffuser optimiser for the centre point
+plt.savefig("2D1.png", dpi=600, bbox_inches="tight")
+plt.show()
