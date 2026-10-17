@@ -16,7 +16,7 @@ model.geom("geom1").lengthUnit("m");
 
 
 /// Define parameters
-String stdn = "123h4g51"; // Number of the new study
+String stdn = "1"; // Number of the new study
 //lattice sizing
 int nucx = 4; //number of unit cells in x
 int nucy = 4; //number of unit cells in y
@@ -70,6 +70,7 @@ double[][][][] block = {
    {{75, 170}, {30, 135}, {30, 45}, {75, 10}},
    {{75, 135}, {75, 100}, {75, 80}, {75, 45}}}
 };
+
 
 
 /// Loop through block
