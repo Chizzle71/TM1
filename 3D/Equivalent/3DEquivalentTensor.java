@@ -16,7 +16,7 @@ model.geom("geom1").lengthUnit("m");
 
 
 /// Define parameters
-String stdn = "123h4g51"; // Number of the new study
+String stdn = "1"; // Number of the new study
 //lattice sizing
 int nucx = 4; //number of unit cells in x
 int nucy = 4; //number of unit cells in y
