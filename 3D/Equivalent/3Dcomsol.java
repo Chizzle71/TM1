@@ -72,6 +72,7 @@ double[][][][] block = {
 };
 
 
+
 /// Loop through block
 for (int i = 0; i < nucz; i++) {
   for (int j = 0; j < nucy; j++) {

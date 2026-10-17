@@ -11,17 +11,28 @@ for (String tag : geomTags) {
 model.geom().create("geom1", 2);
 model.geom("geom1").lengthUnit("m");
 
+
+String file = model.param().get("inputfile");
+int n = (int) model.param().evaluate("n");
+
+
 // Define parameters
-int nucx = 6;
-int nucy = 8;
-double side = 0.03; // Square length
-double h = 0.0011; // Cut out width
+String stdn = ""+n; // Number of the new study
+int nucx = 2;
+int nucy = 2;
+double sidex = 0.01; // Rectangle length in x
+double sidey = 0.01; // Rectangle length in y
+double sidem = sidey;
+if (sidex > sidey) {
+  sidem = sidex;
+}
+double h = 0.0004; // Cut out width
 double h_y = 0;
 double h_x = 0;
 double C_i = 0;
 double D_i = 0;
-double cbp = side/h;
-int arraysize = (int) cbp;
+double cbp = sidem/h;
+int arraysize = (int) cbp+1;
 double[][] As = new double[arraysize][2];
 double[][] Bs = new double[arraysize][2];
 double[][] Cs = new double[arraysize][2];
@@ -29,24 +40,11 @@ double[][] Ds = new double[arraysize][2];
 double[] xs = {0, 0, 0, 0, 0, 0};
 double[] ys = {0, 0, 0, 0, 0, 0};
 String[] innerTags = new String[0];
+double linecount = nucx*(nucy+1)+nucy*(nucx+1);
 
-//double[][] display_grid = {
-//  {-45, -45, -45, -45, -45, -45},
-//  {-45, -45, -45, -45, -45, -45},
-//  {-45, -45, -45, -45, -45, -45},
-//  {-45, -45, -45, -45, -45, -45},
-//  {45, 45, 45, 45, 45, 45},
-//  {45, 45, 45, 45, 45, 45},
-//  {45, 45, 45, 45, 45, 45},
-//  {45, 45, 45, 45, 45, 45}
-//};
 
-double[][] grid = new double[nucxy][nucxy];
-for (int i = 0; i < nucxy; i++) {
-  for (int j = 0; j < nucxy; j++) {
-    grid[i][j] = display_grid[nucxy-1-j][i]; // Matrix transformation
-  }
-}
+double[][] display_grid = readMatrixFromFile(file);
+
 
 // Loop through grid and create squares
 for (int j = 0; j < nucy; j++) {
@@ -54,10 +52,14 @@ for (int j = 0; j < nucy; j++) {
     double theta = display_grid[j][i];
     String tag = String.format("sq_%d_%d", i, j);
     
+    if (theta == 360) {
+      continue;
+    }
+    
     // Unit cell
     // Variables
-    double x = i*side; // Spacing
-    double y = j*side; // Spacing
+    double x = i*sidex; // Spacing
+    double y = j*sidey; // Spacing
     int An = 0; // Polypoint count
     int Bn = 0; // Polypoint count
     int Cn = 0; // Polypoint count
@@ -73,13 +75,13 @@ for (int j = 0; j < nucy; j++) {
     
     // Define second level parameters
     if (theta == 90) {
-      h_y = side;
+      h_y = sidey;
       h_x = h;
       ignore = 1;
     }
     else if (theta == 0) {
       h_y = h;
-      h_x = side;
+      h_x = sidex;
       ignore = 1;
     }
     else {
@@ -89,15 +91,15 @@ for (int j = 0; j < nucy; j++) {
     
     // Make outer square
     String outerTag = tag+"_outer";
-    model.geom("geom1").feature().create(outerTag, "Square");
+    model.geom("geom1").feature().create(outerTag, "Rectangle");
     model.geom("geom1").feature(outerTag).set("base", "corner");
-    model.geom("geom1").feature(outerTag).set("size", side);
+    model.geom("geom1").feature(outerTag).set("size", new double[]{sidex, sidey});
     model.geom("geom1").feature(outerTag).set("pos", new double[]{x, y});
     
     // Define polygon points
     
     // Left side
-    for (double A = side-h; A >= h; A = A-h_y) {
+    for (double A = sidey-h; A >= h; A = A-h_y) {
       // Add this point to the array
       As[An][0] = h;
       As[An][1] = A;
@@ -108,24 +110,24 @@ for (int j = 0; j < nucy; j++) {
     }
     
     // Top side
-    for (double B = h; B <= side-h; B = B+h_x) {
+    for (double B = h; B <= sidex-h; B = B+h_x) {
       // Add this point to the array
       Bs[Bn][0] = B;
-      Bs[Bn][1] = side-h;
+      Bs[Bn][1] = sidey-h;
       // Increase polypoint count
       Bn++;
       // Variables for later
       if (Bn == 1) {
-        D_i = side-2*h+(side-2*h)*Math.tan(theta*Math.PI/180);
+        D_i = sidey-2*h+(sidex-2*h)*Math.tan(theta*Math.PI/180);
       }
       else if (Bn > 1) {
-        D_i = side-h-h_y*(1-(side-h-B)/(h_x));
+        D_i = sidey-h-h_y*(1-(sidex-h-B)/(h_x));
       }
     }
     
     // Bottom side
     if (theta == 90) {C_i = 2*h; }
-    for (double C = C_i; C <= side-h; C = C+h_x) {
+    for (double C = C_i; C <= sidex-h; C = C+h_x) {
       // Add this point to the array
       Cs[Cn][0] = C;
       Cs[Cn][1] = h;
@@ -136,14 +138,15 @@ for (int j = 0; j < nucy; j++) {
     // Right side
     for (double D = D_i; D >= h; D = D-h_y) {
       // Add this point to the array
-      Ds[Dn][0] = side-h;
+      Ds[Dn][0] = sidex-h;
       Ds[Dn][1] = D;
       // Increase polypoint count
       Dn++;
     }
     
     // Make polygon geometry array
-    double npolys = ((side-2*h)/h_x+(side-2*h)/h_y)/2-ignore;
+    double npolys = ((sidex-2*h)/h_x+(sidey-2*h)/h_y)/2-ignore;
+    linecount = linecount+4*npolys-1;
     for (int c2 = 0; c2 <= npolys; c2++) {
       
       // For points along A and C
@@ -164,6 +167,7 @@ for (int j = 0; j < nucy; j++) {
         ys[0] = As[2*c2][1];
         ys[1] = h;
         ys[2] = h;
+        linecount++;
       }
       else {
         // Only points on C
@@ -179,11 +183,12 @@ for (int j = 0; j < nucy; j++) {
         else {
           // With corner point
           xs[0] = Cs[c2*2-An][0];
-          xs[1] = side-h;
-          xs[2] = side-h;
+          xs[1] = sidex-h;
+          xs[2] = sidex-h;
           ys[0] = h;
           ys[1] = h;
           ys[2] = h;
+          linecount--;
         }
       }
       
@@ -193,35 +198,36 @@ for (int j = 0; j < nucy; j++) {
         xs[5] = Bs[c2*2][0];
         xs[4] = Bs[c2*2][0];
         xs[3] = Bs[c2*2+1][0];
-        ys[4] = side-h;
-        ys[5] = side-h;
-        ys[3] = side-h;
+        ys[4] = sidey-h;
+        ys[5] = sidey-h;
+        ys[3] = sidey-h;
       }
       else if (2*c2+1-Bn == 0) {
         // 1 point on B, 1 point on D + top right corner
         xs[5] = Bs[c2*2][0];
-        xs[4] = side-h;
-        xs[3] = side-h;
-        ys[5] = side-h;
-        ys[4] = side-h;
+        xs[4] = sidex-h;
+        xs[3] = sidex-h;
+        ys[5] = sidey-h;
+        ys[4] = sidey-h;
         ys[3] = Ds[0][1];
+        linecount++;
       }
       else {
         // Only points on D
         if (c2*2-Bn-Dn < 0) {
           // No corner point
-          xs[5] = side-h;
-          xs[4] = side-h;
-          xs[3] = side-h;
+          xs[5] = sidex-h;
+          xs[4] = sidex-h;
+          xs[3] = sidex-h;
           ys[5] = Ds[c2*2-Bn][1];
           ys[4] = Ds[c2*2-Bn+1][1];
           ys[3] = Ds[c2*2-Bn+1][1];
         }
         else {
           // With corner point
-          xs[5] = side-h;
-          xs[4] = side-h;
-          xs[3] = side-h;
+          xs[5] = sidex-h;
+          xs[4] = sidex-h;
+          xs[3] = sidex-h;
           ys[5] = Ds[c2*2-Bn][1];
           ys[4] = h;
           ys[3] = h;
@@ -237,7 +243,7 @@ for (int j = 0; j < nucy; j++) {
       }
       else if (m == -1) {
         for (int m1 = 0; m1 < 6; m1++) {
-          xs[m1] = x+side-xs[m1];
+          xs[m1] = x+sidex-xs[m1];
           ys[m1] = y+ys[m1];
         }
       }
@@ -265,23 +271,81 @@ for (int j = 0; j < nucy; j++) {
   }
 }
 
-// Finalise geometry
+// Add geometry
 model.geom("geom1").run();
 
+
 // Add material
-// Get the material node (create it if it doesn't exist)
-model.material().create("mat1", "Common");
-model.material("mat1").label("Copper");
-
-// Set the material from the COMSOL Material Library
-model.material("mat1").set("family", "copper");
-
-// Assign material to all domains
+model.material().create("mat1", "Common", "mod1");
+model.material("mat1").label("Matrix");
+with(model.material("mat1").propertyGroup("def"));
+  set("thermalconductivity", new String[]{"238[W/(m*K)]"}); set("density", new String[]{"2700[kg/m^3]"}); set("heatcapacity", new String[]{"900[J/(kg*K)]"});
+endwith();
 model.material("mat1").selection().all();
+
+
+// Calculations for physics
+for (int i = 0; i < nucy; i++) {
+  String sel_hotline = "hline"+i;
+  double yli = i*sidey+h;
+  model.selection().create(sel_hotline, "Box");
+  model.selection(sel_hotline).geom("geom1", 1);
+  model.selection(sel_hotline).set("xmin", -0.01*h);
+  model.selection(sel_hotline).set("xmax", 0.01*h);
+  model.selection(sel_hotline).set("ymin", yli);
+  model.selection(sel_hotline).set("ymax", yli+h);
+}
+for (int i = 0; i < nucy; i++) {
+  String sel_coldline = "cline"+i;
+  double xli = nucx*sidex;
+  double yli = i*sidey+h;
+  model.selection().create(sel_coldline, "Box");
+  model.selection(sel_coldline).geom("geom1", 1);
+  model.selection(sel_coldline).set("xmin", xli-0.01*h);
+  model.selection(sel_coldline).set("xmax", xli+h);
+  model.selection(sel_coldline).set("ymin", yli);
+  model.selection(sel_coldline).set("ymax", yli+h);
+}
+
+
+// Add physics
+model.physics().create("ht", "HeatTransfer", "geom1");
+//hot
+for (int i = 0; i < nucy; i++) {
+  int j = i+2;
+  String sel_hotline = "hline"+i;
+  String temp = "htemp"+j;
+  model.physics("ht").create(temp, "TemperatureBoundary", 1);
+  model.physics("ht").feature(temp).selection().named(sel_hotline);
+  model.physics("ht").feature(temp).set("T0", "400[K]");
+}
+
+//cold
+for (int i = 0; i < nucy; i++) {
+  int j = i+2;
+  String sel_coldline = "cline"+i;
+  String temp = "ctemp"+j;
+  model.physics("ht").create(temp, "TemperatureBoundary", 1);
+  model.physics("ht").feature(temp).selection().named(sel_coldline);
+  model.physics("ht").feature(temp).set("T0", "300[K]");
+}
 
 
 // Add mesh
 model.mesh().create("mesh1", "geom1");
-model.mesh("mesh1").automatic(true); // Turn off Physics-controlled mesh with(model.mesh("mesh1").feature("size"));
-model.mesh("mesh1").autoMeshSize(7); // [1,9] [fine,coarse]
+model.mesh("mesh1").automatic(true); // Keep on Physics-controlled mesh
+model.mesh("mesh1").autoMeshSize(3); // [1,9] [fine,coarse]
 model.mesh("mesh1").run();
+
+
+// Add study
+model.study().create(stdn);
+model.study(stdn).create("stat", "Stationary");
+model.study(stdn).run();
+
+
+// Results
+model.result().export().create("data"+n, "Data");
+model.result().export("data"+n).set("data", "dset"+n);
+model.result().export("data"+n).set("filename", "output"+n+".txt");
+model.result().export("data"+n).run();
