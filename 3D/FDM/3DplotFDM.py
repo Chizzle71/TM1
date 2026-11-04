@@ -13,7 +13,7 @@ plt.rcParams.update({
     'font.family': 'Times New Roman',
     'font.size': 12*1.8
 })
-
+ 
 # Cores
 set_num_threads(18)
 

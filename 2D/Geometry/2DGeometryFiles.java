@@ -6,7 +6,7 @@ for (String tag : geomTags) {
     break;
   }
 }
-
+ 
 // Create new 2D geometry
 model.geom().create("geom1", 2);
 model.geom("geom1").lengthUnit("m");

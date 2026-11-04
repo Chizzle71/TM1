@@ -172,7 +172,7 @@ for (int i = 0; i < nucz; i++) {
       model.geom("geom1").feature(innerTag).set("size", block_sides_inner);
       model.geom("geom1").feature(innerTag).set("pos", block_inner);
       
-      
+       
       
       /// 6 Difference
       String differenceTag = tag+"_difference";

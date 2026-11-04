@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 from matplotlib.patches import Circle, Rectangle, RegularPolygon
 list(colormaps)
-
+ 
 plt.rcParams.update({
     'font.family': 'Times New Roman',
     'font.size': 12*1.8

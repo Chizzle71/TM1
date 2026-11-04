@@ -16,7 +16,7 @@ for n in range(1, N+1):
 
     print(f"Running COMSOL with n={n}")
     subprocess.run(command)
-
+ 
     output_file = f"output{n}.txt"
 
     print(f"Waiting for {output_file}...")

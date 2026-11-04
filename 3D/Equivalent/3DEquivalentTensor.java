@@ -71,7 +71,7 @@ double[][][][] block = {
    {{75, 135}, {75, 100}, {75, 80}, {75, 45}}}
 };
 
-
+ 
 
 /// Loop through block
 for (int i = 0; i < nucz; i++) {

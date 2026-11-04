@@ -6,7 +6,7 @@ for (int z = 0; z < nucz; z++) {
       block[z][y][x][0] = 45;
       block[z][y][x][1] = 45;
     }
-  }
+  } 
 }
 
 6x6x6 shift
