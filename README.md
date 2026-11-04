@@ -1,6 +1,6 @@
 # Thermal metamaterials
 
-reference to paper
+This repository conatains all the relevant files used in the paper "Adaptive Routing and Cloaking through Thermal Metamaterial Intelligence".
 
 ## Descprition
 
