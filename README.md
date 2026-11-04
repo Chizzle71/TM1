@@ -2,7 +2,7 @@
 
 This repo conatains all the relevant files used in the paper "Adaptive Routing and Cloaking through Thermal Metamaterial Intelligence".
 
-## Description
+# Description
 
 All files are separated into the 2D and 3D folders and the folders/files within are described below:
 
