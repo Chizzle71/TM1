@@ -18,7 +18,8 @@ This Java FEM model for the sake of running it is functionally identical to the 
 
 FDM that is a Python file that also uses the anisotropic conductivity model. There is a plot file which takes a geometry input and outputs the temperature field produced, also with changeable geometry dimensions of the unit cells, lattice size and boundary conditions. The optimiser file takes a starting geometry of usually random thetas and has the same other changeable input variables as the plot file with the addition of the thermal requirements, the output file is  either one or a set (2D or 3D) of .txt files which contain the optimised geometry.
 
-To run the optimiser file yourself it requires a little more explanation. The thermal requirements listed at the start of the file are what are later used in the file to discriminate the performance of the geometry and therefore iterate the geometry. There are two categories of requirements, cloaks which have the goal to make the temperature in the area specified uniform, and targets which are useful for the routing application as they have the goal to reach the
+To run the optimiser file yourself it requires a little more explanation. The thermal requirements listed at the start of the file are what are later used in the file to discriminate the performance of the geometry and therefore iterate the geometry. There are two categories of requirements, cloaks which have the goal to make the temperature in the area specified uniform, and targets which are useful for the routing application as they have the goal to reach the temperature you enter in the entire area or point. The areas or points are input in units of metres from the bottom left of the domain and in (x,y) or (x,y,z) format and can be input in any regular shape or irregular shpae that you define. Requirements can be overlayed on top of each (for example to have a cloak at a specific temperature) and under each requirements section the weighting can be adjusted such that if the performance of the cloak is more important than reducing the temperature of a point next to it the discriminator will prioritise this.
+For the process of running the optimiser, general recommendation for the pikl is to do around 300 generations (100 at a time) (until the score stops decreasing) at a standard deviation (sigma) of 5 and population size of 8, then decrease sigma to around 1 and increase population size to 16-20 (a higher population size isn't required but is recommended for the 3D model especially due to the increased number of variables), this will increase the accuracy but also increase the number of simulations to be run per adopted iteration. The optimiser files currently run at 5 division and a low convergence criteria for faster simulation times however this as usual can be changed near the top of the code and is commented to explain, and also importantly the number of cores the code will be run on should be changed to suit your machine using the set_num_threads() function.
 
 ## ML
 
@@ -27,20 +28,6 @@ Contains a Python file to run the respective models in batch mode from the termi
 ## Menu
 
 Contains 2D/4D arrays for the 2D/3D models of common thermal devices or testing setups that can be used in the matrix input files for convenience.
-
-
-
-
-
-
-The optimiser FDM files are the optimising code that require thermal requirements and iterate the geometry and the plot FDM files take the optimised geometry files and run them with higher divsions and convergence criteria and then plots the results - the thermal requirements/features need to be input in this file below the solver if labels want to be made on the graphs.
-General recommendation for the pikl is do around 300 generations (100 at a time) (untill the score stops decreasing) at a standard deviation (sigma) of 5 and population size of 8 then decrease sigma to 1 or 2 and increase population size to 16-20 (a higher population size isn't reuired but is recommended for the 3D model due to the increased number of variables).
-The optimiser files currently run at 5 division and a low convergence criteria for faster simulation times.
-Change number of cores to your preference.
-
-
-
-
 
 # Dependencies
 
