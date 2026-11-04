@@ -11,6 +11,6 @@ Change number of cores to your preference.
 
 # Dependencies
 
-'''bash
+```bash
 pip install numba numpy matplotlib cma
-'''
+```
