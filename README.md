@@ -2,21 +2,21 @@
 
 This repo conatains all the relevant files used in the paper "Adaptive Routing and Cloaking through Thermal Metamaterial Intelligence".
 
-# Description
+## Description
 
 All files are separated into the 2D and 3D folders and the folders/files within are described below:
 
-# Geometry
+## Geometry
 
-# Equivalent
+## Equivalent
 
-# FDM
+## FDM
 
-# ML
+## ML
 
 Contains a python file to run the respective models in batch mode to obtain the sample data for training the ML models.
 
-# Menu
+## Menu
 
 All files are separated within the 2D and 3D folders, with an additional folder for ML which contains a python file to run the respective models in batch mode to obtain the sample data for training the ML models, and an additional 2D/3DMenu file which contains 2D/4D arrays of common thermal devices or testing setups that can be used in the matrix input files. Each model has 2 ways to enter the geometry of the unit cells, either through an array in the code or by reading .txt files. The Java files are to be imported into the application builder in COMSOL and made into a method then the method can be ran to obtain results.
 The first model is called Geometry and is a FEM to be imported into Java.
