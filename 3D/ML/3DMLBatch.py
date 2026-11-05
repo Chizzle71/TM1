@@ -2,7 +2,7 @@ import subprocess
 import os
 import time
 
-N = 10 #change this to the number of simulations you want to run
+N = 10 #change this to the number of simulations you want to run (can have problems with  N > 40)
 
 for n in range(1, N+1):
 
