@@ -15,12 +15,12 @@ model.geom("geom1").lengthUnit("m");
 
 
 
-n = Integer.parseInt(model.param().get("n"));
+//n = Integer.parseInt(model.param().get("n")); //for ML batches
 
 
 
 /// Define parameters
-String stdn = ""+n; // Number of the new study
+String stdn = "1"; // Number of the new study - increment when making a new study or delete old one
 //lattice sizing
 int nucx = 12; //number of unit cells in x
 int nucy = 12; //number of unit cells in y
